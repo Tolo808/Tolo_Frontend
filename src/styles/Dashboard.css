@@ -1,0 +1,432 @@
+/* General page container */
+.page {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0a0a0a, #1e3a8a);
+    /* dark background */
+    color: #f0f0f0;
+    /* light text */
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header + Footer */
+.header,
+.footer {
+    width: 100%;
+    padding: 15px 20px;
+    background: linear-gradient(90deg, #0f172a, #1e3a8a);
+    /* black → navy gradient */
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.footer {
+    margin-top: auto;
+    /* sticks footer to bottom */
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Main content / table wrapper */
+.main-content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    /* remove auto-centering */
+    padding: 0;
+    /* no padding on sides */
+}
+
+/* Tabs */
+h2,
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.tabs button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    background-color: #1f2937;
+    /* dark gray/navy */
+    color: #cbd5e1;
+    /* light gray */
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+.tabs button.active {
+    background-color: #1e40af;
+    /* navy blue */
+    color: #fff;
+}
+
+.tabs button:hover:not(.active) {
+    background-color: #374151;
+    /* lighter dark */
+}
+
+/* Table */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #111827;
+    border-radius: 0;
+    /* remove rounding so it fits edge-to-edge */
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Table headers and rows */
+.table th,
+.table td {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #1f2937;
+    /* subtle row separation */
+}
+
+.table th {
+    background-color: #1e3a8a;
+    /* navy header */
+    color: #fff;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.table tr:nth-child(even) {
+    background-color: #1f2937;
+    /* striped rows */
+}
+
+.table tr:hover {
+    background-color: #1e40af;
+    /* navy highlight on hover */
+    color: #fff;
+    transition: background 0.2s ease;
+}
+
+/* Table inputs and selects */
+.table input[type="number"],
+.table select {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    border: 1px solid #374151;
+    background-color: #111827;
+    color: #f0f0f0;
+}
+
+.table input[type="number"]:focus,
+.table select:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 6px rgba(30, 64, 175, 0.8);
+}
+
+/* Table buttons */
+.table button {
+    margin-right: 10px;
+    
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.table button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.table button:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+/* ✅ */
+.table button:nth-child(1) {
+    background-color: #10b981;
+    color: white;
+}
+
+/* ❌ */
+.table button:nth-child(2) {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* 📩 */
+.table button:nth-child(3) {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* 🗑️ */
+.table button:nth-child(4) {
+    background-color: #6b7280;
+    color: white;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.pagination button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: #1e40af;
+    /* navy blue */
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: #1e3a8a;
+}
+.logout-btn {
+    background-color: #ef4444;
+    /* red */
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #dc2626;
+    /* darker red */
+}
+.logout-btn {
+    background-color: #ef4444;
+    /* red */
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #dc2626;
+    /* darker red */
+}
+.new-delivery-banner {
+    background: #4caf50;
+    color: white;
+    padding: 12px;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 8px;
+    animation: fadeInOut 5s ease forwards;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+/* Modal overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    /* dark navy overlay matching header/footer */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+/* Modal card */
+.modal-card {
+    background: #1f2937;
+    /* matches table row dark gray/navy */
+    padding: 24px 30px;
+    border-radius: 12px;
+    width: 420px;
+    max-width: 90%;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid #374151;
+    /* subtle border like table inputs */
+    animation: fadeInScale 0.2s ease-out;
+    color: #f0f0f0;
+    /* light text matching dashboard */
+}
+
+/* Modal animation */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Modal title */
+.modal-card h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+    color: #f0f0f0;
+}
+
+/* Textarea input */
+.modal-card textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    font-size: 0.95rem;
+    border: 1px solid #374151;
+    /* matches table input borders */
+    border-radius: 8px;
+    resize: none;
+    outline: none;
+    background: #111827;
+    /* dark table row color */
+    color: #f0f0f0;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-card textarea:focus {
+    border-color: #1e40af;
+    /* focus highlight matches table input focus */
+    box-shadow: 0 0 6px rgba(30, 64, 175, 0.8);
+}
+
+/* Modal buttons container */
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Submit button */
+.modal-buttons button:first-child {
+    background: #3b82f6;
+    /* matches your "📩" button in table */
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.modal-buttons button:first-child:hover {
+    background: #2563eb;
+    /* darker hover */
+}
+
+/* Cancel button */
+.modal-buttons button:last-child {
+    background: #374151;
+    /* matches dark table row */
+    color: #f0f0f0;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.modal-buttons button:last-child:hover {
+    background: #4b5563;
+    /* slightly lighter on hover */
+}
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* Prevent column shift */
+}
+
+.table th,
+.table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding: 5px;
+}
+.add-delivery-form .form-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.add-delivery-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.add-delivery-form input,
+.add-delivery-form select,
+.add-delivery-form textarea {
+    padding: 5px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.add-delivery-form button {
+    margin-right: 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}

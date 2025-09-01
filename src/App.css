@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+.page {
+  padding: 20px;
+}
+
+.card {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 10px #040d21;
+}
+
+h2,
+h3 {
+  color: #58a6ff;
+}
+
+.tabs button {
+  background: #21262d;
+  color: #c9d1d9;
+  border: none;
+  padding: 8px 16px;
+  margin-right: 5px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: #58a6ff;
+  color: black;
+}
+
+.add-form input,
+.add-form select {
+  flex: 1 1 200px;
+  padding: 8px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+.add-form button.btn.primary {
+  background: #58a6ff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  color: black;
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+table th,
+table td {
+  border: 1px solid #30363d;
+  padding: 8px;
+  text-align: left;
+}
+
+.pagination {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #21262d;
+  color: #c9d1d9;
+}
+
+.pagination button:disabled {
+  background: #0d1117;
+  color: #666;
+}
