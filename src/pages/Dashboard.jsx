@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
 
@@ -16,7 +16,6 @@ export default function Dashboard() {
   });
   const [newDeliveryAlert, setNewDeliveryAlert] = useState(false);
 
-  // Modal state for unsuccessful reason
   const [unsuccessfulModal, setUnsuccessfulModal] = useState({
     open: false,
     deliveryId: null,
@@ -25,6 +24,9 @@ export default function Dashboard() {
 
   const perPage = 10;
   const navigate = useNavigate();
+
+  // keep track of last fetch controller
+  const fetchController = useRef(null);
 
   // Map driver_id -> driver name
   const driverMap = useMemo(() => {
@@ -37,19 +39,33 @@ export default function Dashboard() {
 
   // Fetch all deliveries
   const fetchAllDeliveries = async () => {
+    if (fetchController.current) {
+      fetchController.current.abort();
+    }
+    const controller = new AbortController();
+    fetchController.current = controller;
+
     try {
-      const res = await fetch(`${BACKEND_URL}/api/deliveries`);
+      const res = await fetch(`${BACKEND_URL}/api/deliveries`, {
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error("Failed to fetch deliveries");
       const data = await res.json();
 
       setAllDeliveries((prev) => {
-        if (prev.length && data.length > prev.length) {
-          setNewDeliveryAlert(true);
-          setTimeout(() => setNewDeliveryAlert(false), 5000);
+        if (JSON.stringify(prev) !== JSON.stringify(data)) {
+          if (prev.length && data.length > prev.length) {
+            setNewDeliveryAlert(true);
+            setTimeout(() => setNewDeliveryAlert(false), 5000);
+          }
+          return data;
         }
-        return data;
+        return prev;
       });
     } catch (err) {
-      console.error("Failed to fetch deliveries:", err);
+      if (err.name !== "AbortError") {
+        console.error("Failed to fetch deliveries:", err);
+      }
     }
   };
 
@@ -57,6 +73,7 @@ export default function Dashboard() {
   const fetchDrivers = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/drivers`);
+      if (!res.ok) throw new Error("Failed to fetch drivers");
       const data = await res.json();
       setDrivers(data);
     } catch (err) {
@@ -76,12 +93,17 @@ export default function Dashboard() {
     setDeliveryCounts(counts);
   }, [allDeliveries]);
 
-  // Initial fetch + polling
+  // Initial fetch + optimized polling
   useEffect(() => {
     fetchDrivers();
     fetchAllDeliveries();
-    const interval = setInterval(fetchAllDeliveries, 3000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchAllDeliveries, 1000); // faster polling
+    return () => {
+      clearInterval(interval);
+      if (fetchController.current) {
+        fetchController.current.abort();
+      }
+    };
   }, []);
 
   useEffect(() => setPage(1), [statusFilter]);
@@ -157,24 +179,38 @@ export default function Dashboard() {
     const deliveryType = delivery.delivery_type;
 
     if (!driverId) return alert("Please select a driver first.");
-    if (!price || !deliveryType) return alert("Set price and delivery type first.");
+    if (!price || !deliveryType)
+      return alert("Set price and delivery type first.");
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/assign_driver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ delivery_id: deliveryId, driver_id: driverId, price, delivery_type: deliveryType }),
+        body: JSON.stringify({
+          delivery_id: deliveryId,
+          driver_id: driverId,
+          price,
+          delivery_type: deliveryType,
+        }),
       });
 
       const data = await res.json();
 
       if (!data.success) {
-        return alert("Failed to assign driver: " + (data.error || "Check console"));
+        return alert(
+          "Failed to assign driver: " + (data.error || "Check console")
+        );
       }
 
-      updateDeliveryState(deliveryId, { driver_id: driverId, price, delivery_type: deliveryType });
+      updateDeliveryState(deliveryId, {
+        driver_id: driverId,
+        price,
+        delivery_type: deliveryType,
+      });
 
-      alert(`Driver "${driverMap[driverId]}" assigned with ${deliveryType} delivery (Price: ${price})`);
+      alert(
+        `Driver "${driverMap[driverId]}" assigned with ${deliveryType} delivery (Price: ${price})`
+      );
     } catch (err) {
       console.error("Error assigning driver:", err);
       alert("Error assigning driver. Check console for details.");
@@ -183,38 +219,38 @@ export default function Dashboard() {
 
   // Notify driver
   const notifyDriver = async (deliveryId) => {
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/notify_driver`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delivery_id: deliveryId }),
-    });
-    const result = await response.json();
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/notify_driver`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delivery_id: deliveryId }),
+      });
+      const result = await response.json();
 
-    if (result.success) {
-      alert("Driver and customers notified successfully!");
-      setAllDeliveries((prev) =>
-        prev.map((d) =>
-          d._id === deliveryId ? { ...d, notified: true } : d
-        )
-      );
-    } else {
-      alert("Failed to notify: " + result.error);
+      if (result.success) {
+        alert("Driver and customers notified successfully!");
+        setAllDeliveries((prev) =>
+          prev.map((d) =>
+            d._id === deliveryId ? { ...d, notified: true } : d
+          )
+        );
+      } else {
+        alert("Failed to notify: " + result.error);
+      }
+    } catch (error) {
+      console.error("Error notifying driver:", error);
+      alert("An error occurred while notifying the driver.");
     }
-  } catch (error) {
-    console.error("Error notifying driver:", error);
-    alert("An error occurred while notifying the driver.");
-  }
-};
-
-
-
+  };
 
   // Delete delivery
   const deleteDelivery = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this delivery?")) return;
+    if (!window.confirm("Are you sure you want to delete this delivery?"))
+      return;
     try {
-      await fetch(`${BACKEND_URL}/api/delete_delivery/${id}`, { method: "DELETE" });
+      await fetch(`${BACKEND_URL}/api/delete_delivery/${id}`, {
+        method: "DELETE",
+      });
       setAllDeliveries((prev) => prev.filter((d) => d._id !== id));
     } catch (err) {
       console.error(err);
@@ -242,11 +278,14 @@ export default function Dashboard() {
     if (!reason) return alert("Please enter a reason");
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/update_delivery_status/${deliveryId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "unsuccessful", reason }),
-      });
+      const res = await fetch(
+        `${BACKEND_URL}/api/update_delivery_status/${deliveryId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "unsuccessful", reason }),
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to update delivery");
 
@@ -272,14 +311,15 @@ export default function Dashboard() {
     <div className="page">
       <h2>🚚 Tolo Delivery</h2>
 
-      {newDeliveryAlert && <div className="new-delivery-banner">🚀 New delivery received!</div>}
+      {newDeliveryAlert && (
+        <div className="new-delivery-banner">🚀 New delivery received!</div>
+      )}
 
       {/* Tabs */}
       <div className="tabs">
         <button onClick={() => navigate("/add-delivery")}>Add Delivery</button>
 
         {["pending", "successful", "unsuccessful"].map((s) => (
-          
           <button
             key={s}
             className={statusFilter === s ? "active" : ""}
@@ -292,7 +332,9 @@ export default function Dashboard() {
               : `Unsuccessful (${deliveryCounts.unsuccessful || 0})`}
           </button>
         ))}
-        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
         <button onClick={() => navigate("/price")}>Price Calculator</button>
       </div>
 
@@ -364,7 +406,9 @@ export default function Dashboard() {
 
                   <select
                     value={d.delivery_type || "payable"}
-                    onChange={(e) => updateDeliveryField(d._id, "delivery_type", e.target.value)}
+                    onChange={(e) =>
+                      updateDeliveryField(d._id, "delivery_type", e.target.value)
+                    }
                   >
                     <option value="payable">Payable</option>
                     <option value="free">Free</option>
@@ -387,19 +431,24 @@ export default function Dashboard() {
               </td>
 
               <td>
-                <button disabled={d.status === "successful"} onClick={() => updateStatus(d._id, "successful")}>✅</button>
-                <button disabled={d.status === "unsuccessful"} onClick={() => handleMarkUnsuccessful(d._id)}>❌</button>
+                <button
+                  disabled={d.status === "successful"}
+                  onClick={() => updateStatus(d._id, "successful")}
+                >
+                  ✅
+                </button>
+                <button
+                  disabled={d.status === "unsuccessful"}
+                  onClick={() => handleMarkUnsuccessful(d._id)}
+                >
+                  ❌
+                </button>
                 <button
                   disabled={!d.driver_id || d.notified}
                   onClick={() => notifyDriver(d._id)}
                 >
                   {d.notified ? "Notified ✅" : "Notify Driver"}
                 </button>
-
-
-
-
-
                 <button onClick={() => deleteDelivery(d._id)}>🗑️</button>
               </td>
             </tr>
@@ -409,9 +458,18 @@ export default function Dashboard() {
 
       {/* Pagination */}
       <div className="pagination">
-        <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Prev</button>
-        <span>{page} / {totalPages || 1}</span>
-        <button disabled={page === totalPages || totalPages === 0} onClick={() => setPage((p) => p + 1)}>Next</button>
+        <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+          Prev
+        </button>
+        <span>
+          {page} / {totalPages || 1}
+        </span>
+        <button
+          disabled={page === totalPages || totalPages === 0}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </button>
       </div>
 
       {/* Modal for unsuccessful reason */}
