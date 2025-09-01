@@ -276,10 +276,7 @@ export default function Dashboard() {
 
       {/* Tabs */}
       <div className="tabs">
-        <button onClick={() => navigate("/add-delivery")}>Add Delivery</button>
-
-        {["pending", "successful", "unsuccessful"].map((s) => (
-          
+        {["pending", "successful", "unsuccessful", "add"].map((s) => (
           <button
             key={s}
             className={statusFilter === s ? "active" : ""}
@@ -289,12 +286,15 @@ export default function Dashboard() {
               ? `Successful (${deliveryCounts.successful || 0})`
               : s === "pending"
               ? `Pending (${deliveryCounts.pending || 0})`
-              : `Unsuccessful (${deliveryCounts.unsuccessful || 0})`}
+              : s === "unsuccessful"
+              ? `Unsuccessful (${deliveryCounts.unsuccessful || 0})`
+              : "➕ Add Delivery"}
           </button>
         ))}
         <button className="logout-btn" onClick={handleLogout}>Logout</button>
         <button onClick={() => navigate("/price")}>Price Calculator</button>
       </div>
+
 
       {/* Table */}
       <table className="table">
@@ -413,6 +413,46 @@ export default function Dashboard() {
         <span>{page} / {totalPages || 1}</span>
         <button disabled={page === totalPages || totalPages === 0} onClick={() => setPage((p) => p + 1)}>Next</button>
       </div>
+          {/* Add Delivery Form */}
+          {statusFilter === "add" && (
+            <div className="add-delivery-form">
+              <h3>Add New Delivery</h3>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target);
+                  const newDelivery = Object.fromEntries(formData.entries());
+
+                  try {
+                    const res = await fetch(`${BACKEND_URL}/api/add_delivery`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(newDelivery),
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                      setAllDeliveries((prev) => [data.delivery, ...prev]); // add instantly
+                      setStatusFilter("pending"); // go back to pending tab
+                    } else {
+                      alert("Failed to add delivery: " + (data.error || "Unknown error"));
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    alert("Error adding delivery.");
+                  }
+                }}
+              >
+                <input name="pickup" placeholder="Pickup" required />
+                <input name="dropoff" placeholder="Dropoff" required />
+                <input name="sender_phone" placeholder="Sender Phone" required />
+                <input name="receiver_phone" placeholder="Receiver Phone" required />
+                <input name="Quantity" type="number" placeholder="Quantity" required />
+                <input name="item_description" placeholder="Item Description" />
+                <button type="submit">Save Delivery</button>
+              </form>
+            </div>
+          )}
 
       {/* Modal for unsuccessful reason */}
       {unsuccessfulModal.open && (
