@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/AdminPanel.css";
 
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = "web-production-c4710.up.railway.app";
 
 export default function AdminPanel() {
   const navigate = useNavigate();

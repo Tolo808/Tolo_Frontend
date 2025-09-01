@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Dashboard.css";
 
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = "https://web-production-c4710.up.railway.app";
 
 export default function AddDelivery() {
   const navigate = useNavigate();
