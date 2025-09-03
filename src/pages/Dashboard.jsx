@@ -80,7 +80,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDrivers();
     fetchAllDeliveries();
-    const interval = setInterval(fetchAllDeliveries, 3000);
+    const interval = setInterval(fetchAllDeliveries, 10000);
     return () => clearInterval(interval);
   }, []);
 
