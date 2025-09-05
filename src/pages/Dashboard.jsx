@@ -363,7 +363,7 @@ export default function Dashboard() {
                   </select>
 
                   <select
-                    value={d.delivery_type || "payable"}
+                    value={d.delivery_type || " "}
                     onChange={(e) => updateDeliveryField(d._id, "delivery_type", e.target.value)}
                   >
                     <option value="payable">Payable</option>
