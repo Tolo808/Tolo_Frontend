@@ -332,7 +332,7 @@ export default function Dashboard() {
               <td>{d.item_description || "-"}</td>
               <td>{d.status}</td>
               <td>{d.delivery_type || "Not Set"}</td>
-              <td>{d.driver_id ? driverMap[d.driver_id] : "Not Assigned"}</td>
+              <td>{d.assigned_driver_name || "Not Assigned"}</td>
               <td>{d.price || "-"}</td>
               <td>
                 {d.timestamp
