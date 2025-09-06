@@ -332,7 +332,11 @@ export default function Dashboard() {
               <td>{d.item_description || "-"}</td>
               <td>{d.status}</td>
               <td>{d.delivery_type || "Not Set"}</td>
-              <td>{d.assigned_driver_name || "Not Assigned"}</td>
+              <td>
+                {d.assigned_driver_name ||
+                (d.assigned_driver_id && driverMap[d.assigned_driver_id]) ||
+                "Not Assigned"}
+              </td>
               <td>{d.price || "-"}</td>
               <td>
                 {d.timestamp
@@ -357,22 +361,23 @@ export default function Dashboard() {
                     }
                   >
                     <option value="">Select Price</option>
-                    <option value={100}>100</option>
-                    <option value={200}>200</option>
-                    <option value={300}>300</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="300">300</option>
                   </select>
 
                   <select
                     value={d.delivery_type || " "}
                     onChange={(e) => updateDeliveryField(d._id, "delivery_type", e.target.value)}
                   >
+                    <option value="">Select Delivery Type</option>
                     <option value="payable">Payable</option>
                     <option value="free">Free</option>
                   </select>
 
                   <select
                     className="driver-select"
-                    value={d.driver_id || ""}
+                    value={d.assigned_driver_id || ""}
                     onChange={(e) => assignDriver(d._id, e.target.value)}
                     disabled={!d.price || !d.delivery_type}
                   >
@@ -390,16 +395,11 @@ export default function Dashboard() {
                 <button disabled={d.status === "successful"} onClick={() => updateStatus(d._id, "successful")}>✅</button>
                 <button disabled={d.status === "unsuccessful"} onClick={() => handleMarkUnsuccessful(d._id)}>❌</button>
                 <button
-                  disabled={!d.driver_id || d.notified}
+                  disabled={!d.assigned_driver_id || d.notified}
                   onClick={() => notifyDriver(d._id)}
                 >
                   {d.notified ? "Notified ✅" : "Notify Driver"}
                 </button>
-
-
-
-
-
                 <button onClick={() => deleteDelivery(d._id)}>🗑️</button>
               </td>
             </tr>
