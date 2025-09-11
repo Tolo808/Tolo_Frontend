@@ -338,19 +338,7 @@ export default function Dashboard() {
                 "Not Assigned"}
               </td>
               <td>{d.price || "-"}</td>
-              <td>
-                {d.timestamp
-                  ? new Date(d.timestamp).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      hour12: false,
-                    })
-                  : "-"}
-              </td>
+              <td>{d.created_at || d.timestamp || "-"}</td>
 
               <td>
                 <div className="assign-driver-cell">
