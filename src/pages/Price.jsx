@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import polyline from "@mapbox/polyline";
 import "../styles/Price.css";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -16,8 +15,7 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// 👉 Replace this with your real Gebeta API key
-const GEBETA_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55bmFtZSI6IlRlY2ggQ2l0eSBQLkwuQyAiLCJkZXNjcmlwdGlvbiI6ImJmODk0YzI2LTJiMDEtNDQxYS1hNGJiLTZhM2U4YjE1NTc3OCIsImlkIjoiOTcwMGQ4YjQtY2ZhNy00ODI2LTg5OGEtNmI4ZGE4MjE5YzExIiwiaXNzdWVkX2F0IjoxNzU4MTg2Njg2LCJpc3N1ZXIiOiJodHRwczovL21hcGFwaS5nZWJldGEuYXBwIiwiand0X2lkIjoiMCIsInNjb3BlcyI6WyJGRUFUVVJFX0FMTCJdLCJ1c2VybmFtZSI6IlRvbG8ifQ.XheJqj-Eg_1mZApoHfyTNMQ4Yg-ri65SRNhH0-aacn0";
+const GEBETA_API_KEY = "YOUR_GEBETA_API_KEY";
 
 export default function Price() {
   const navigate = useNavigate();
@@ -31,9 +29,7 @@ export default function Price() {
   const [price, setPrice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [routeCoords, setRouteCoords] = useState([]);
 
-  // 🔎 Autocomplete
   const fetchSuggestions = async (query, setter) => {
     if (!query || query.length < 2) return setter([]);
     try {
@@ -78,7 +74,6 @@ export default function Price() {
     setDropSuggestions([]);
   };
 
-  // 📏 Calculate price using Gebeta directions
   const calculatePrice = async () => {
     if (!pickupCoord || !dropCoord) {
       alert("Select pickup and drop from suggestions!");
@@ -90,21 +85,11 @@ export default function Price() {
         `https://mapapi.gebeta.app/api/route/direction/?origin=${pickupCoord.latitude},${pickupCoord.longitude}&destination=${dropCoord.latitude},${dropCoord.longitude}&apiKey=${GEBETA_API_KEY}`
       );
       const data = await res.json();
-
       const distance = data.distance || data.routes?.[0]?.distance;
-      const geometry = data.routes?.[0]?.geometry;
-
       if (!distance) throw new Error("Failed to calculate distance");
       const km = distance / 1000;
       setDistanceKm(km.toFixed(1));
 
-      // Decode route polyline
-      if (geometry) {
-        const decoded = polyline.decode(geometry);
-        setRouteCoords(decoded.map(([lat, lng]) => [lat, lng]));
-      }
-
-      // 💰 Simple tiered pricing
       let calculatedPrice = 0;
       if (km <= 5.9) calculatedPrice = 100;
       else if (km <= 10.9) calculatedPrice = 200;
@@ -130,7 +115,6 @@ export default function Price() {
     setShowPopup(false);
     setDistanceKm(null);
     setPrice(null);
-    setRouteCoords([]);
   };
 
   return (
@@ -168,49 +152,24 @@ export default function Price() {
       </button>
 
       <h2 className="price-header" style={{ textAlign: "center", padding: "10px 0" }}>
-        Delivery Price Calculator (Gebeta Maps – Addis Ababa)
+        Delivery Price Calculator (Addis Ababa)
       </h2>
 
-      {/* Input + suggestions */}
       <div className="price-form" style={{ padding: "10px", textAlign: "center" }}>
-        <div style={{ position: "relative", display: "inline-block", width: "45%", marginRight: "5px" }}>
-          <input
-            type="text"
-            placeholder="Pickup Location"
-            value={pickup}
-            onChange={handlePickupChange}
-            style={{ width: "100%", padding: "8px" }}
-          />
-          {pickupSuggestions.length > 0 && (
-            <ul className="suggestions-list">
-              {pickupSuggestions.map((s) => (
-                <li key={s.place_id} onClick={() => selectPickup(s)}>
-                  {s.description}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div style={{ position: "relative", display: "inline-block", width: "45%", marginLeft: "5px" }}>
-          <input
-            type="text"
-            placeholder="Drop Location"
-            value={drop}
-            onChange={handleDropChange}
-            style={{ width: "100%", padding: "8px" }}
-          />
-          {dropSuggestions.length > 0 && (
-            <ul className="suggestions-list">
-              {dropSuggestions.map((s) => (
-                <li key={s.place_id} onClick={() => selectDrop(s)}>
-                  {s.description}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
+        <input
+          type="text"
+          placeholder="Pickup Location"
+          value={pickup}
+          onChange={handlePickupChange}
+          style={{ width: "45%", marginRight: "5px", padding: "8px" }}
+        />
+        <input
+          type="text"
+          placeholder="Drop Location"
+          value={drop}
+          onChange={handleDropChange}
+          style={{ width: "45%", marginLeft: "5px", padding: "8px" }}
+        />
         <button
           onClick={calculatePrice}
           disabled={loading}
@@ -220,7 +179,6 @@ export default function Price() {
         </button>
       </div>
 
-      {/* Confirmation Popup */}
       {showPopup && (
         <div
           className="price-popup"
@@ -258,12 +216,11 @@ export default function Price() {
         </div>
       )}
 
-      {/* Gebeta Map */}
       <div className="price-map" style={{ flex: 1 }}>
         <MapContainer center={[9.03, 38.74]} zoom={13} style={{ width: "100%", height: "100%" }}>
           <TileLayer
-            url={`https://mapapi.gebeta.app/api/tiles/{z}/{x}/{y}.png?apiKey=${GEBETA_API_KEY}`}
-            attribution="&copy; Gebeta Maps"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; OpenStreetMap contributors"
           />
           {pickupCoord && (
             <Marker position={[pickupCoord.latitude, pickupCoord.longitude]}>
@@ -274,9 +231,6 @@ export default function Price() {
             <Marker position={[dropCoord.latitude, dropCoord.longitude]}>
               <Popup>Drop: {drop}</Popup>
             </Marker>
-          )}
-          {routeCoords.length > 0 && (
-            <Polyline positions={routeCoords} color="blue" />
           )}
         </MapContainer>
       </div>
