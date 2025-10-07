@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
-import price from "./price"
+
 const BACKEND_URL = "https://web-production-c4710.up.railway.app";
 
 export default function Dashboard() {
