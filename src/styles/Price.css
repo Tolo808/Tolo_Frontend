@@ -1,90 +1,183 @@
+/* 🌌 Fullscreen layout */
 .price-page {
-    width: 100%;
-    height: 100vh;
     display: flex;
-    flex-direction: column;
-    background: linear-gradient(135deg, #0a0a0a, #1e3a8a);
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background: radial-gradient(circle at top left, #0a0a0a 20%, #1e3a8a 90%);
     color: #f0f0f0;
-    padding: 15px;
-    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
 }
 
+/* 💳 Main card */
+.price-card {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 20px;
+    padding: 40px;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7);
+    text-align: center;
+    animation: fadeInScale 0.4s ease-in-out;
+}
+
+/* ✨ Entrance animation */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 🏷️ Header */
+.price-header {
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #60a5fa, #1e3a8a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+}
+
+/* 📄 Subtitle */
+.price-subtitle {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin-bottom: 25px;
+}
+
+/* 🧾 Form container */
 .price-form {
     display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-bottom: 15px;
-    position: relative;
-    z-index: 1000;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.input-group {
+/* 🧭 Input label */
+.form-group {
     position: relative;
-    flex: 1;
+    text-align: left;
 }
 
-.input-group input {
+label {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #cbd5e1;
+}
+
+.icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    color: #3b82f6;
+}
+
+/* 💬 Input styling */
+input {
     width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #374151;
+    background: #111827;
+    color: #f0f0f0;
     outline: none;
+    font-size: 1rem;
+    transition: all 0.25s ease;
+}
+
+input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+}
+
+/* 📍 Suggestions dropdown */
+.suggestions {
+    position: absolute;
+    width: 100%;
+    background: #111827;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    margin-top: 4px;
+    z-index: 20;
+    max-height: 180px;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+}
+
+.suggestion-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background: #1e3a8a;
+    color: #fff;
+}
+
+/* 💰 Calculate button */
+.calculate-btn {
+    background: linear-gradient(90deg, #1e40af, #2563eb);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     font-size: 1rem;
 }
 
-.suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: #1e293b;
-    border-radius: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 2000;
+.calculate-btn:hover {
+    background: linear-gradient(90deg, #2563eb, #1d4ed8);
+    transform: scale(1.04);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
 }
 
-.suggestions li {
-    padding: 10px;
-    cursor: pointer;
+/* 🧾 Result box */
+.result-box {
+    background: #0f172a;
+    border: 1px solid #1e3a8a;
+    border-radius: 10px;
+    padding: 16px;
+    color: #f0f0f0;
+    margin-top: 15px;
+    text-align: left;
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 10px rgba(30, 64, 175, 0.3);
 }
 
-.suggestions li:hover {
-    background: #334155;
-}
+/* 📱 Mobile friendly */
+@media (max-width: 480px) {
+    .price-card {
+        padding: 25px;
+        width: 95%;
+    }
 
-button {
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-}
+    .price-header {
+        font-size: 1.4rem;
+    }
 
-button:disabled {
-    background: #475569;
-    cursor: not-allowed;
-}
+    input {
+        font-size: 0.9rem;
+    }
 
-button:hover:not(:disabled) {
-    background: #1d4ed8;
-}
-
-.price-result {
-    text-align: center;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-}
-
-.price-map {
-    flex: 1;
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    .calculate-btn {
+        font-size: 0.9rem;
+        padding: 12px;
+    }
 }
