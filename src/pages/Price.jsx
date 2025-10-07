@@ -1,238 +1,203 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import React, { useState, useEffect, useRef } from "react";
+import { MapPin, Navigation, DollarSign } from "lucide-react";
 import "../styles/Price.css";
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
-
-const GEBETA_API_KEY = "YOUR_GEBETA_API_KEY";
+const API_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb21wYW55bmFtZSI6InRpbnNhZSIsImRlc2NyaXB0aW9uIjoiZDBlZjg5MzYtODkwNi00ZTBmLWI5MjgtZjZlYWE4NmNhYWIxIiwiaWQiOiJkOTk2ODZjYy1iNDcwLTQ4OTctOWVhOC0wNmExYzU4YjFkZGEiLCJpc3N1ZWRfYXQiOjE3NTkxMTc1OTQsImlzc3VlciI6Imh0dHBzOi8vbWFwYXBpLmdlYmV0YS5hcHAiLCJqd3RfaWQiOiIwIiwic2NvcGVzIjpbIkZFQVRVUkVfQUxMIl0sInVzZXJuYW1lIjoiU29sZW4ifQ.rAvceHp9j2buKO4xFPwjHqAdgJxF7ukJmPh9epJi2IQ";
 
 export default function Price() {
-  const navigate = useNavigate();
   const [pickup, setPickup] = useState("");
-  const [drop, setDrop] = useState("");
-  const [pickupCoord, setPickupCoord] = useState(null);
-  const [dropCoord, setDropCoord] = useState(null);
+  const [dropoff, setDropoff] = useState("");
+  const [pickupCoords, setPickupCoords] = useState(null);
+  const [destCoords, setDestCoords] = useState(null);
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
-  const [dropSuggestions, setDropSuggestions] = useState([]);
-  const [distanceKm, setDistanceKm] = useState(null);
-  const [price, setPrice] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [destSuggestions, setDestSuggestions] = useState([]);
+  const [results, setResults] = useState("");
 
-  const fetchSuggestions = async (query, setter) => {
-    if (!query || query.length < 2) return setter([]);
+  // Refs for detecting outside clicks
+  const pickupRef = useRef(null);
+  const destRef = useRef(null);
+
+  // Detect clicks outside suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        pickupRef.current &&
+        !pickupRef.current.contains(event.target)
+      ) {
+        setPickupSuggestions([]);
+      }
+      if (
+        destRef.current &&
+        !destRef.current.contains(event.target)
+      ) {
+        setDestSuggestions([]);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Debounce helper
+  const debounce = (func, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => func(...args), delay);
+    };
+  };
+
+  const fetchSuggestions = async (query, setSuggestions) => {
+    if (!query) return setSuggestions([]);
     try {
       const res = await fetch(
-        `https://mapapi.gebeta.app/api/place/autocomplete/?text=${encodeURIComponent(
+        `https://mapapi.gebeta.app/api/v1/route/geocoding?name=${encodeURIComponent(
           query
-        )}&limit=5&apiKey=${GEBETA_API_KEY}`
+        )}&apiKey=${API_KEY}`
       );
       const data = await res.json();
-      const mapped = data.predictions?.map((p) => ({
-        place_id: p.place_id,
-        description: p.description,
-        lat: p.lat || p.latitude,
-        lon: p.lon || p.longitude,
-      }));
-      setter(mapped || []);
-    } catch (err) {
-      console.error(err);
-      setter([]);
+      const valid = Array.isArray(data.data)
+        ? data.data.filter(
+            (item) =>
+              typeof item.latitude === "number" &&
+              typeof item.longitude === "number"
+          )
+        : [];
+      setSuggestions(valid);
+    } catch {
+      setSuggestions([]);
     }
   };
 
-  const handlePickupChange = (e) => {
-    setPickup(e.target.value);
-    fetchSuggestions(e.target.value, setPickupSuggestions);
-  };
+  const debouncedPickup = debounce(
+    (q) => fetchSuggestions(q, setPickupSuggestions),
+    300
+  );
+  const debouncedDest = debounce(
+    (q) => fetchSuggestions(q, setDestSuggestions),
+    300
+  );
 
-  const handleDropChange = (e) => {
-    setDrop(e.target.value);
-    fetchSuggestions(e.target.value, setDropSuggestions);
-  };
-
-  const selectPickup = (place) => {
-    setPickup(place.description);
-    setPickupCoord({ latitude: parseFloat(place.lat), longitude: parseFloat(place.lon) });
-    setPickupSuggestions([]);
-  };
-
-  const selectDrop = (place) => {
-    setDrop(place.description);
-    setDropCoord({ latitude: parseFloat(place.lat), longitude: parseFloat(place.lon) });
-    setDropSuggestions([]);
-  };
-
-  const calculatePrice = async () => {
-    if (!pickupCoord || !dropCoord) {
-      alert("Select pickup and drop from suggestions!");
+  const calculateRoute = async () => {
+    if (!pickupCoords || !destCoords) {
+      setResults("⚠️ Please select both pickup and destination.");
       return;
     }
+
+    const origin = `${pickupCoords.lat},${pickupCoords.lon}`;
+    const destination = `${destCoords.lat},${destCoords.lon}`;
+    const url = `https://mapapi.gebeta.app/api/route/direction/?origin=${origin}&destination=${destination}&apiKey=${API_KEY}`;
+
     try {
-      setLoading(true);
-      const res = await fetch(
-        `https://mapapi.gebeta.app/api/route/direction/?origin=${pickupCoord.latitude},${pickupCoord.longitude}&destination=${dropCoord.latitude},${dropCoord.longitude}&apiKey=${GEBETA_API_KEY}`
-      );
+      const res = await fetch(url);
       const data = await res.json();
-      const distance = data.distance || data.routes?.[0]?.distance;
-      if (!distance) throw new Error("Failed to calculate distance");
-      const km = distance / 1000;
-      setDistanceKm(km.toFixed(1));
 
-      let calculatedPrice = 0;
-      if (km <= 5.9) calculatedPrice = 100;
-      else if (km <= 10.9) calculatedPrice = 200;
-      else if (km <= 17) calculatedPrice = 300;
-      else calculatedPrice = 500;
+      if (!data.totalDistance) {
+        setResults("❌ No route found for the selected locations.");
+        return;
+      }
 
-      setPrice(calculatedPrice);
-      setShowPopup(true);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to calculate distance!");
-    } finally {
-      setLoading(false);
+      const distanceKm = (data.totalDistance / 1000).toFixed(2);
+      const durationMin = Math.ceil(data.timetaken / 60);
+
+      let price = 0;
+      if (distanceKm <= 5) price = 100;
+      else if (distanceKm <= 10) price = 200;
+      else if (distanceKm <= 17) price = 300;
+      else price = 400;
+
+      setResults(
+        `📍 Distance: ${distanceKm} km\n⏱ Duration: ${durationMin} min\n💰 Estimated Price: ${price} birr`
+      );
+    } catch {
+      setResults("❌ Error calculating route.");
     }
-  };
-
-  const handleConfirm = () => {
-    alert(`Price confirmed: ${price} Birr`);
-    setShowPopup(false);
-  };
-
-  const handleCancel = () => {
-    setShowPopup(false);
-    setDistanceKm(null);
-    setPrice(null);
   };
 
   return (
-    <div
-      className="price-page"
-      style={{
-        width: "100vw",
-        height: "100vh",
-        padding: 0,
-        margin: 0,
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "#0a0a0a",
-        color: "#f0f0f0",
-        position: "relative",
-      }}
-    >
-      {/* Back to Dashboard button */}
-      <button
-        onClick={() => navigate("/dashboard")}
-        style={{
-          position: "absolute",
-          top: 10,
-          left: 10,
-          padding: "8px 12px",
-          backgroundColor: "#1e3a8a",
-          color: "#f0f0f0",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          zIndex: 1000,
-        }}
-      >
-        ← Back to Dashboard
-      </button>
+    <div className="price-page">
+      <div className="price-card">
+        <h2 className="price-header">🚕 Tolo Delivery Price Estimator</h2>
+        <p className="price-subtitle">
+          Instantly calculate delivery distance & price
+        </p>
 
-      <h2 className="price-header" style={{ textAlign: "center", padding: "10px 0" }}>
-        Delivery Price Calculator (Addis Ababa)
-      </h2>
-
-      <div className="price-form" style={{ padding: "10px", textAlign: "center" }}>
-        <input
-          type="text"
-          placeholder="Pickup Location"
-          value={pickup}
-          onChange={handlePickupChange}
-          style={{ width: "45%", marginRight: "5px", padding: "8px" }}
-        />
-        <input
-          type="text"
-          placeholder="Drop Location"
-          value={drop}
-          onChange={handleDropChange}
-          style={{ width: "45%", marginLeft: "5px", padding: "8px" }}
-        />
-        <button
-          onClick={calculatePrice}
-          disabled={loading}
-          style={{ marginTop: "10px", padding: "8px 20px" }}
-        >
-          {loading ? "Calculating..." : "Calculate"}
-        </button>
-      </div>
-
-      {showPopup && (
-        <div
-          className="price-popup"
-          style={{
-            position: "absolute",
-            top: "20%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "#1e3a8a",
-            padding: "20px",
-            borderRadius: "12px",
-            zIndex: 1000,
-            width: "300px",
-            textAlign: "center",
-          }}
-        >
-          <h3>Confirm Delivery</h3>
-          <p>Pickup: {pickup}</p>
-          <p>Drop: {drop}</p>
-          <p>Distance: {distanceKm} km</p>
-          <div>
-            <label>Price (Birr): </label>
+        <div className="price-form">
+          {/* Pickup Input */}
+          <div className="form-group" ref={pickupRef}>
+            <label>
+              <MapPin className="icon" /> Pickup Location
+            </label>
             <input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(parseInt(e.target.value))}
+              value={pickup}
+              onChange={(e) => {
+                setPickup(e.target.value);
+                debouncedPickup(e.target.value);
+              }}
+              placeholder="Enter pickup location..."
             />
+            {pickupSuggestions.length > 0 && (
+              <div className="suggestions">
+                {pickupSuggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      setPickup(s.name);
+                      setPickupCoords({ lat: s.latitude, lon: s.longitude });
+                      setPickupSuggestions([]);
+                    }}
+                    className="suggestion-item"
+                  >
+                    {s.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="popup-buttons" style={{ marginTop: "10px" }}>
-            <button onClick={handleConfirm} style={{ marginRight: "5px" }}>
-              Confirm
-            </button>
-            <button onClick={handleCancel}>Cancel</button>
-          </div>
-        </div>
-      )}
 
-      <div className="price-map" style={{ flex: 1 }}>
-        <MapContainer center={[9.03, 38.74]} zoom={13} style={{ width: "100%", height: "100%" }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; OpenStreetMap contributors"
-          />
-          {pickupCoord && (
-            <Marker position={[pickupCoord.latitude, pickupCoord.longitude]}>
-              <Popup>Pickup: {pickup}</Popup>
-            </Marker>
+          {/* Destination Input */}
+          <div className="form-group" ref={destRef}>
+            <label>
+              <Navigation className="icon" /> Destination
+            </label>
+            <input
+              value={dropoff}
+              onChange={(e) => {
+                setDropoff(e.target.value);
+                debouncedDest(e.target.value);
+              }}
+              placeholder="Enter destination..."
+            />
+            {destSuggestions.length > 0 && (
+              <div className="suggestions">
+                {destSuggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      setDropoff(s.name);
+                      setDestCoords({ lat: s.latitude, lon: s.longitude });
+                      setDestSuggestions([]);
+                    }}
+                    className="suggestion-item"
+                  >
+                    {s.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button onClick={calculateRoute} className="calculate-btn">
+            <DollarSign className="icon" /> Calculate Price
+          </button>
+
+          {results && (
+            <div className="result-box">
+              <pre>{results}</pre>
+            </div>
           )}
-          {dropCoord && (
-            <Marker position={[dropCoord.latitude, dropCoord.longitude]}>
-              <Popup>Drop: {drop}</Popup>
-            </Marker>
-          )}
-        </MapContainer>
+        </div>
       </div>
     </div>
   );
